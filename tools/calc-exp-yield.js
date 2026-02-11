@@ -127,7 +127,7 @@ function buildRows(rawSeeds, lands) {
             continue;
         }
 
-        const expPerCycle = expHarvest + 1; // +1 来自铲地经验
+        const expPerCycle = expHarvest; // 铲地经验有上限了所以不再+1
         const growTimeNormalFert = calcEffectiveGrowTime(growTimeSec);
 
         // 整个农场一轮 = 生长时间 + 本轮全部地块种植耗时
