@@ -141,6 +141,7 @@ PB数据解码工具
 可用类型:
   gatepb.Message / gatepb.Meta
   gamepb.userpb.LoginRequest / LoginReply / HeartbeatRequest / HeartbeatReply
+  gamepb.userpb.DeleteAccountRequest / DeleteAccountReply
   gamepb.plantpb.AllLandsRequest / AllLandsReply / HarvestRequest / HarvestReply
   gamepb.plantpb.WaterLandRequest / WeedOutRequest / InsecticideRequest
   gamepb.plantpb.PlantRequest / PlantReply / RemovePlantRequest / RemovePlantReply
@@ -182,6 +183,25 @@ PB数据解码工具
             console.log('');
 
             if (msg.body && msg.body.length > 0) {
+                if (meta.message_type === 3) {
+                    try {
+                        const event = types.EventMessage.decode(msg.body);
+                        console.log('=== gatepb.EventMessage (notify) ===');
+                        console.log(`  message_type: ${event.message_type}`);
+                        if (event.body && event.body.length > 0) {
+                            if ((event.message_type || '').includes('Kickout')) {
+                                try {
+                                    const kickout = types.KickoutNotify.decode(event.body);
+                                    console.log('=== gatepb.KickoutNotify ===');
+                                    console.log(JSON.stringify(kickout.toJSON(), longReplacer, 2));
+                                    return;
+                                } catch (e) {}
+                            }
+                            console.log(`  body(hex): ${Buffer.from(event.body).toString('hex')}`);
+                        }
+                    } catch (e) {}
+                }
+
                 const svc = meta.service_name || '';
                 const mtd = meta.method_name || '';
                 const isReq = meta.message_type === 1;

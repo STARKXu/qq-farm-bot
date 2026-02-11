@@ -56,6 +56,12 @@ node client.js --code <你的登录code>
 
 # 微信小程序
 node client.js --code <你的登录code> --wx
+
+# 注销账号（仅发送注销请求）!!!注意，本脚本不会收集你任何的隐私数据，提交的数据只会发送至qq经典农场服务器，未保存至其他任何位置
+# !!!注意，高危操作！！！
+# !!!注意，高危操作！！！
+# !!!注意，高危操作！！！
+node client.js --code <你的登录code> --delete-account --name <姓名> --cert-id <证件号> --cert-type 0
 ```
 
 ### 自定义巡查间隔
@@ -73,6 +79,10 @@ node client.js --code <code> --interval 5 --friend-interval 2
 | `--wx` | 使用微信登录 | QQ 小程序 |
 | `--interval` | 自己农场巡查间隔（秒） | 2 |
 | `--friend-interval` | 好友巡查间隔（秒） | 1 |
+| `--delete-account` | 注销账号模式（只发送注销请求） | — |
+| `--name` | 注销实名姓名（配合 `--delete-account`） | — |
+| `--cert-id` | 注销证件号（配合 `--delete-account`） | — |
+| `--cert-type` | 证件类型: `0/414/516/553/555` 或 `china/passport/hk/other` | `0` |
 | `--verify` | 验证 proto 定义是否正确 | — |
 | `--decode` | 进入 PB 数据解码模式 | — |
 

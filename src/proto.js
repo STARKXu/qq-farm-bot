@@ -38,6 +38,8 @@ async function loadProto() {
     types.HeartbeatReply = root.lookupType('gamepb.userpb.HeartbeatReply');
     types.ReportArkClickRequest = root.lookupType('gamepb.userpb.ReportArkClickRequest');
     types.ReportArkClickReply = root.lookupType('gamepb.userpb.ReportArkClickReply');
+    types.DeleteAccountRequest = root.lookupType('gamepb.userpb.DeleteAccountRequest');
+    types.DeleteAccountReply = root.lookupType('gamepb.userpb.DeleteAccountReply');
 
     // 农场
     types.AllLandsRequest = root.lookupType('gamepb.plantpb.AllLandsRequest');
