@@ -8,6 +8,7 @@ const { types } = require('./proto');
 const { sendMsgAsync, getUserState, networkEvents } = require('./network');
 const { toLong, toNum, getServerTimeSec, toTimeSec, log, logWarn, sleep } = require('./utils');
 const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime } = require('./gameConfig');
+const { getPlantingRecommendation } = require('../tools/calc-exp-yield');
 
 // ============ 内部状态 ============
 let isCheckingFarm = false;
@@ -163,7 +164,7 @@ async function plantSeeds(seedId, landIds) {
     return successCount;
 }
 
-async function findBestSeed() {
+async function findBestSeed(landsCount) {
     const SEED_SHOP_ID = 2;
     const shopReply = await getShopInfo(SEED_SHOP_ID);
     if (!shopReply.goods_list || shopReply.goods_list.length === 0) {
@@ -208,14 +209,34 @@ async function findBestSeed() {
         return null;
     }
 
-    // 按等级要求排序
-    // 取最高等级种子: available.sort((a, b) => b.requiredLevel - a.requiredLevel);
-    // 暂时改为取最低等级种子 (白萝卜)
-    available.sort((a, b) => a.requiredLevel - b.requiredLevel);
+    if (CONFIG.forceLowestLevelCrop) {
+        available.sort((a, b) => a.requiredLevel - b.requiredLevel || a.price - b.price);
+        return available[0];
+    }
+
+    try {
+        log('商店', `等级: ${state.level}，土地数量: ${landsCount}`);
+        
+        const rec = getPlantingRecommendation(state.level, landsCount == null ? 18 : landsCount, { top: 50 });
+        const rankedSeedIds = rec.candidatesNormalFert.map(x => x.seedId);
+        for (const seedId of rankedSeedIds) {
+            const hit = available.find(x => x.seedId === seedId);
+            if (hit) return hit;
+        }
+    } catch (e) {
+        logWarn('商店', `经验效率推荐失败，使用兜底策略: ${e.message}`);
+    }
+
+    // 兜底：等级在28级以前还是白萝卜比较好，28级以上选最高等级的种子
+    if(state.level && state.level <= 28){
+        available.sort((a, b) => a.requiredLevel - b.requiredLevel);
+    }else{
+        available.sort((a, b) => b.requiredLevel - a.requiredLevel);
+    }
     return available[0];
 }
 
-async function autoPlantEmptyLands(deadLandIds, emptyLandIds) {
+async function autoPlantEmptyLands(deadLandIds, emptyLandIds, unlockedLandCount) {
     let landsToPlant = [...emptyLandIds];
     const state = getUserState();
 
@@ -237,7 +258,7 @@ async function autoPlantEmptyLands(deadLandIds, emptyLandIds) {
     // 2. 查询种子商店
     let bestSeed;
     try {
-        bestSeed = await findBestSeed();
+        bestSeed = await findBestSeed(unlockedLandCount);
     } catch (e) {
         logWarn('商店', `查询失败: ${e.message}`);
         return;
@@ -471,6 +492,7 @@ async function checkFarm() {
 
         const lands = landsReply.lands;
         const status = analyzeLands(lands);
+        const unlockedLandCount = lands.filter(land => land && land.unlocked).length;
         isFirstFarmCheck = false;
 
         // 构建状态摘要
@@ -519,7 +541,7 @@ async function checkFarm() {
         const allEmptyLands = [...status.empty];
         if (allDeadLands.length > 0 || allEmptyLands.length > 0) {
             try {
-                await autoPlantEmptyLands(allDeadLands, allEmptyLands);
+                await autoPlantEmptyLands(allDeadLands, allEmptyLands, unlockedLandCount);
                 actions.push(`种植${allDeadLands.length + allEmptyLands.length}`);
             } catch (e) { logWarn('种植', e.message); }
         }

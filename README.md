@@ -10,7 +10,7 @@
 ### 自己农场
 - **自动收获** — 检测成熟作物并自动收获
 - **自动铲除** — 自动铲除枯死/收获后的作物残留
-- **自动种植** — 收获/铲除后自动购买种子并种植（当前设定为种植白萝卜，因为经过数据计算(脚本可以自动种植-收获)，白萝卜的收益是最高的（经验收益）不喜欢的自己修改一下即可
+- **自动种植** — 收获/铲除后自动购买种子并种植（默认按当前等级 + 已解锁土地数计算经验效率后选种；可配置强制最低等级作物）
 - **自动施肥** — 种植后自动施放普通肥料加速生长
 - **自动除草** — 检测并清除杂草
 - **自动除虫** — 检测并消灭害虫
@@ -121,6 +121,18 @@ node tools/calc-exp-yield.js --lands 18 --level 27
 node tools/calc-exp-yield.js --input tools/seed-shop-merged-export.json
 ```
 
+### 当前种子选择逻辑
+
+默认策略（`src/farm.js`）：
+1. 拉取商店中当前可购买的种子（已解锁、满足等级、未超限购）。
+2. 读取账号等级 + 已解锁土地块数，调用 `tools/calc-exp-yield.js` 的 `getPlantingRecommendation(level, lands)`。
+3. 按普通肥经验效率排名，从高到低选择在商店可买到的第一个种子。
+4. 若推荐失败，则走兜底排序逻辑。
+
+强制最低等级作物（通常白萝卜）：
+- 在 `src/config.js` 设置 `forceLowestLevelCrop: true` 后，直接选择最低等级种子。
+- 开启后不再执行经验效率分析推荐。
+
 ## 项目结构
 
 <details>
@@ -201,11 +213,13 @@ QQ | 我的农场 | Lv24 125/500 | 金币:88888
 ```javascript
 const CONFIG = {
     serverUrl: 'wss://gate-obt.nqf.qq.com/prod/ws',
-    clientVersion: '1.6.0.11_20251224',
+    clientVersion: '1.6.0.14_20251224',
     platform: 'qq',              // 平台: qq 或 wx
+    os: 'iOS',
     heartbeatInterval: 25000,    // 心跳间隔 25秒
-    farmCheckInterval: 2000,     // 农场巡查间隔 2秒
-    friendCheckInterval: 1000,   // 好友巡查间隔 1秒
+    farmCheckInterval: 1000,     // 农场巡查完成后等待间隔
+    friendCheckInterval: 10000,  // 好友巡查完成后等待间隔
+    forceLowestLevelCrop: false, // true: 固定最低等级作物（白萝卜优先），跳过经验效率分析
 };
 ```
 
