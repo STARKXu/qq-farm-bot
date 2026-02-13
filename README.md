@@ -55,7 +55,7 @@ npm install
 
 ```bash
 # QQ小程序 (无任何参数默认qq平台且使用二维码登录)
-node client.js --code
+node client.js
 
 # QQ小程序 (默认)
 node client.js --code <你的登录code>
