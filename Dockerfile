@@ -1,25 +1,13 @@
-# 构建
-FROM node:25.6.1-slim AS builder
+FROM node:lts-alpine
+
+ENV TZ=Asia/Shanghai
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --omit=dev
 
 COPY . .
 
-# 运行
-FROM node:25.6.1-slim
-
-ENV NODE_ENV=production
-WORKDIR /app
-
-COPY --from=builder /app/package*.json ./
-RUN npm install --omit=dev
-
-COPY --from=builder /app ./
-
-USER node
-
-CMD sh -c "node client.js --code ${CODE}"
+CMD ["node", "client.js", "--qr"]
