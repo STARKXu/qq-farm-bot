@@ -1,5 +1,4 @@
 const http = require('http');
-const url = require('url');
 const QRCode = require('qrcode');
 
 const PORT = process.env.QR_PORT || 3000;
@@ -9,11 +8,11 @@ const PORT = process.env.QR_PORT || 3000;
  */
 function startQRService() {
     const server = http.createServer(async (req, res) => {
-        const parsedUrl = url.parse(req.url, true);
-        const { pathname, query } = parsedUrl;
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+        const { pathname, searchParams } = parsedUrl;
 
         if (pathname === '/qr' || pathname === '/') {
-            const data = query.data;
+            const data = searchParams.get('data');
             if (!data) {
                 res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
                 res.end('缺少 data 参数');
