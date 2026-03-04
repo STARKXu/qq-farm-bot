@@ -45,6 +45,7 @@ QQ经典农场 挂机脚本
   --wx                使用微信登录 (默认为QQ小程序)
   --interval          自己农场巡查完成后等待秒数, 默认10秒, 最低10秒
   --friend-interval   好友巡查完成后等待秒数, 默认1秒, 最低1秒
+  --no-fertilize      不自动施肥 (默认自动施肥)
   --verify            验证proto定义
   --decode            解码PB数据 (运行 --decode 无参数查看详细帮助)
 
@@ -74,16 +75,15 @@ function getArgsMap(args) {
             continue;
         }
 
-        if (i >= (args.length - 1)) {
-            break;
+        // 检查是否有下一个参数，且下一个参数不是另一个配置项
+        const nextValue = args[i + 1];
+        if (nextValue !== undefined && !nextValue.startsWith('--')) {
+            map.set(key, nextValue);
+            i++; // 跳过下一个参数
+        } else {
+            // 这是一个布尔开关
+            map.set(key, true);
         }
-
-        const value = args[++i];
-        if (value === undefined || value.startsWith('--')) {
-            continue;
-        }
-
-        map.set(key, value);
     }
 
     return map;
@@ -114,6 +114,9 @@ function parseArgs(argsMap) {
                 break;
             case '--friend-interval':
                 friend_interval = parseInt(value);
+                break;
+            case '--no-fertilize':
+                CONFIG.enableFertilize = false;
                 break;
         }
     }
